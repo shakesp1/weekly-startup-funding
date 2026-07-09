@@ -402,11 +402,32 @@ function categoryColor(cat) {
   return CATEGORY_COLOR[cat] || 'var(--stage-unknown)';
 }
 
-/* ---------- 기술동향 섹션 렌더러 (카테고리별로 묶어서 정렬) ---------- */
+/* ---------- 기술동향 섹션 렌더러 (기사 많은 카테고리 순, 기타는 항상 맨 뒤) ---------- */
 function renderTechTable(entries) {
-  const sorted = entries.slice().sort((a, b) =>
-    (a.category || '기타').localeCompare(b.category || '기타', 'ko')
-  );
+  // 카테고리별 기사 개수 집계
+  const counts = {};
+  entries.forEach(e => {
+    const cat = e.category || '기타';
+    counts[cat] = (counts[cat] || 0) + 1;
+  });
+
+  // 카테고리 정렬: 기타는 항상 맨 뒤, 나머지는 기사 개수 많은 순
+  const categories = Object.keys(counts).sort((a, b) => {
+    if (a === '기타' && b === '기타') return 0;
+    if (a === '기타') return 1;
+    if (b === '기타') return -1;
+    return counts[b] - counts[a];
+  });
+  const rank = {};
+  categories.forEach((c, i) => { rank[c] = i; });
+
+  const sorted = entries.slice().sort((a, b) => {
+    const catA = a.category || '기타';
+    const catB = b.category || '기타';
+    if (rank[catA] !== rank[catB]) return rank[catA] - rank[catB];
+    // 같은 카테고리 안에서는 최신순 유지
+    return (b.pub_date || '').localeCompare(a.pub_date || '');
+  });
 
   const rows = sorted.map(e => `
     <tr>
