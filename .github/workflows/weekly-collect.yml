@@ -29,10 +29,16 @@ jobs:
           NAVER_CLIENT_SECRET: ${{ secrets.NAVER_CLIENT_SECRET }}
         run: python scripts/collect_funding.py
 
+      - name: 기술동향 수집 및 정리
+        env:
+          NAVER_CLIENT_ID: ${{ secrets.NAVER_CLIENT_ID }}
+          NAVER_CLIENT_SECRET: ${{ secrets.NAVER_CLIENT_SECRET }}
+        run: python scripts/collect_tech_trends.py
+
       - name: 변경사항 커밋 및 푸시
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add docs/data/all.json
+          git add docs/data/all.json docs/data/tech.json
           git diff --staged --quiet || git commit -m "주간 업데이트: $(date +'%Y-%m-%d')"
           git push
