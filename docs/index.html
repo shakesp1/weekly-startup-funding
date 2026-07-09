@@ -1,9 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>주간 스타트업 투자유치 원장</title>
+<title>주간 스타트업 원장</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;700;900&family=IBM+Plex+Sans+KR:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
@@ -34,7 +35,7 @@
   }
 
   .wrap {
-    max-width: 1040px;
+    max-width: 1080px;
     margin: 0 auto;
     padding: 48px 24px 96px;
   }
@@ -45,7 +46,7 @@
     align-items: flex-start;
     border-bottom: 3px solid var(--ink);
     padding-bottom: 20px;
-    margin-bottom: 8px;
+    margin-bottom: 0;
     gap: 20px;
   }
 
@@ -61,7 +62,7 @@
   h1 {
     font-family: 'Noto Serif KR', serif;
     font-weight: 900;
-    font-size: 34px;
+    font-size: 32px;
     line-height: 1.25;
     margin: 0 0 8px;
   }
@@ -69,7 +70,7 @@
   .subhead {
     color: var(--ink-soft);
     font-size: 14px;
-    max-width: 50ch;
+    max-width: 52ch;
   }
 
   .seal {
@@ -88,6 +89,32 @@
   .seal circle.dial { fill: none; stroke: var(--seal); stroke-width: 1; }
   .seal .mark { fill: var(--seal); font-size: 20px; font-family: 'Noto Serif KR', serif; font-weight: 700; }
 
+  .section-tabs {
+    display: flex;
+    gap: 8px;
+    margin: 0 0 20px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .section-tab {
+    font-family: 'Noto Serif KR', serif;
+    font-weight: 700;
+    font-size: 14.5px;
+    padding: 12px 18px;
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: var(--ink-soft);
+    cursor: pointer;
+    margin-bottom: -1px;
+  }
+  .section-tab.active {
+    color: var(--ink);
+    border-bottom-color: var(--seal);
+  }
+
+  .section-panel { display: none; }
+  .section-panel.active { display: block; }
+
   .meta-row {
     display: flex;
     justify-content: space-between;
@@ -95,11 +122,11 @@
     font-family: 'JetBrains Mono', monospace;
     font-size: 12px;
     color: var(--ink-soft);
-    padding: 12px 0 24px;
+    padding: 4px 0 20px;
     flex-wrap: wrap;
     gap: 8px;
   }
-  #totalCount { color: var(--ink); font-weight: 600; }
+  .total-count { color: var(--ink); font-weight: 600; }
 
   .disclaimer {
     background: #FBF3E7;
@@ -160,16 +187,16 @@
   tbody tr:hover { background: #FBFAF5; }
   tbody tr:last-child td { border-bottom: none; }
 
-  .company {
+  .primary-cell {
     font-weight: 700;
     font-size: 14.5px;
   }
-  .company a {
+  .primary-cell a {
     color: var(--ink);
     text-decoration: none;
     border-bottom: 1px solid var(--rule);
   }
-  .company a:hover { border-bottom-color: var(--seal); color: var(--seal); }
+  .primary-cell a:hover { border-bottom-color: var(--seal); color: var(--seal); }
 
   .stage-pill {
     display: inline-block;
@@ -188,7 +215,7 @@
     white-space: nowrap;
   }
 
-  .investors, .summary {
+  .muted-cell {
     color: var(--ink-soft);
     line-height: 1.55;
   }
@@ -213,8 +240,8 @@
   }
 
   @media (max-width: 600px) {
-    h1 { font-size: 26px; }
-    .seal { width: 64px; height: 64px; }
+    h1 { font-size: 24px; }
+    .seal { width: 60px; height: 60px; }
     thead { display: none; }
     table, tbody, tr, td { display: block; width: 100%; }
     tbody tr { border-bottom: 1px solid var(--rule); padding: 12px 0; }
@@ -235,9 +262,9 @@
 
   <header>
     <div>
-      <div class="masthead-label">Weekly Funding Ledger · Korea Startups</div>
-      <h1>주간 스타트업<br>투자유치 원장</h1>
-      <div class="subhead">네이버 뉴스에서 매주 자동 수집하고, 정규식·키워드 규칙으로 정리한 국내 스타트업 투자유치 기록입니다.</div>
+      <div class="masthead-label">Weekly Ledger · Korea Startups & Tech</div>
+      <h1>주간 스타트업 원장</h1>
+      <div class="subhead">뉴스·RSS를 매주 자동 수집하고, 정규식·키워드 규칙으로 정리한 국내 스타트업 투자유치 및 대학 기술 동향 기록입니다.</div>
     </div>
     <div class="seal" aria-hidden="true">
       <svg viewBox="0 0 100 100">
@@ -252,21 +279,41 @@
     </div>
   </header>
 
-  <div class="meta-row">
-    <span>총 <span id="totalCount">0</span>건 기록됨</span>
-    <span id="lastUpdated">마지막 갱신 확인 중…</span>
-  </div>
+  <nav class="section-tabs" id="sectionTabs">
+    <button class="section-tab active" data-section="funding">주간 스타트업 투자유치</button>
+    <button class="section-tab" data-section="tech">주간 기술 동향</button>
+  </nav>
 
-  <div class="disclaimer">
-    ⓘ 이 데이터는 AI 요약 없이 정규식·키워드 규칙으로 자동 추출됩니다. 회사명·투자자 인식이 부정확할 수 있으니,
-    정확한 내용은 각 회사명 링크의 원문 기사를 확인해주세요.
-  </div>
+  <!-- 투자유치 섹션 -->
+  <section class="section-panel active" id="panel-funding">
+    <div class="meta-row">
+      <span>총 <span class="total-count" id="funding-total">0</span>건 기록됨</span>
+      <span id="funding-updated">마지막 갱신 확인 중…</span>
+    </div>
+    <div class="disclaimer">
+      ⓘ 이 데이터는 AI 요약 없이 정규식·키워드 규칙으로 자동 추출됩니다. 회사명·투자자 인식이 부정확할 수 있으니,
+      정확한 내용은 각 회사명 링크의 원문 기사를 확인해주세요.
+    </div>
+    <div class="week-tabs" id="funding-weekTabs"></div>
+    <div id="funding-content"></div>
+  </section>
 
-  <div class="week-tabs" id="weekTabs"></div>
-  <div id="content"></div>
+  <!-- 기술동향 섹션 -->
+  <section class="section-panel" id="panel-tech">
+    <div class="meta-row">
+      <span>총 <span class="total-count" id="tech-total">0</span>건 기록됨</span>
+      <span id="tech-updated">마지막 갱신 확인 중…</span>
+    </div>
+    <div class="disclaimer">
+      ⓘ 대학교·연구자·연구실명은 규칙 기반으로 최대한 추출한 것으로, 기사에 명시되지 않은 항목은
+      "확인 필요"로 표시됩니다. 정확한 내용은 기술명 링크의 원문 기사를 확인해주세요.
+    </div>
+    <div class="week-tabs" id="tech-weekTabs"></div>
+    <div id="tech-content"></div>
+  </section>
 
   <footer>
-    본 데이터는 네이버 뉴스 검색 결과를 규칙 기반으로 자동 추출한 것으로, 오탈자·누락·오류가 있을 수 있습니다.
+    본 데이터는 뉴스·RSS 검색 결과를 규칙 기반으로 자동 추출한 것으로, 오탈자·누락·오류가 있을 수 있습니다.
     매주 월요일 오전 자동 갱신됩니다.
   </footer>
 
@@ -286,7 +333,6 @@ const STAGE_COLOR = {
   '전략적투자': 'var(--stage-unknown)',
   '미상': 'var(--stage-unknown)',
 };
-
 function stageColor(stage) {
   return STAGE_COLOR[stage] || '#8A8578';
 }
@@ -297,18 +343,29 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
-function renderWeek(weekKey, entries) {
+function emptyState(msg) {
+  return `
+    <div class="empty-state">
+      ${msg}<br>
+      <strong>매주 월요일 오전 9시(KST)</strong>에 자동으로 수집이 실행됩니다.<br>
+      지금 바로 확인하고 싶다면 저장소의 <strong>Actions 탭 → Weekly Startup Funding Collector → Run workflow</strong>로 수동 실행할 수 있습니다.
+    </div>
+  `;
+}
+
+/* ---------- 투자유치 섹션 렌더러 ---------- */
+function renderFundingTable(entries) {
   const rows = entries.map(e => `
     <tr>
-      <td data-label="회사" class="company">
+      <td data-label="회사" class="primary-cell">
         <a href="${escapeHtml(e.source_url)}" target="_blank" rel="noopener">${escapeHtml(e.company)}</a>
       </td>
       <td data-label="투자단계">
         <span class="stage-pill" style="background:${stageColor(e.stage)}">${escapeHtml(e.stage)}</span>
       </td>
       <td data-label="투자금액" class="amount">${escapeHtml(e.amount)}</td>
-      <td data-label="투자자" class="investors">${escapeHtml(e.investors)}</td>
-      <td data-label="요약(사업내용·투자포인트)" class="summary">${escapeHtml(e.summary)}</td>
+      <td data-label="투자자" class="muted-cell">${escapeHtml(e.investors)}</td>
+      <td data-label="요약(사업내용·투자포인트)" class="muted-cell">${escapeHtml(e.summary)}</td>
     </tr>
   `).join('');
 
@@ -328,34 +385,56 @@ function renderWeek(weekKey, entries) {
   `;
 }
 
-function emptyState() {
+/* ---------- 기술동향 섹션 렌더러 ---------- */
+function renderTechTable(entries) {
+  const rows = entries.map(e => `
+    <tr>
+      <td data-label="기술명" class="primary-cell">
+        <a href="${escapeHtml(e.source_url)}" target="_blank" rel="noopener">${escapeHtml(e.tech_name)}</a>
+      </td>
+      <td data-label="대학교" class="muted-cell">${escapeHtml(e.university)}</td>
+      <td data-label="연구실" class="muted-cell">${escapeHtml(e.lab)}</td>
+      <td data-label="연구자" class="muted-cell">${escapeHtml(e.researcher)}</td>
+      <td data-label="기술요약" class="muted-cell">${escapeHtml(e.summary)}</td>
+    </tr>
+  `).join('');
+
   return `
-    <div class="empty-state">
-      아직 수집된 데이터가 없습니다.<br>
-      <strong>매주 월요일 오전 9시(KST)</strong>에 자동으로 수집이 실행됩니다.<br>
-      지금 바로 확인하고 싶다면 저장소의 <strong>Actions 탭 → Weekly Startup Funding Collector → Run workflow</strong>로 수동 실행할 수 있습니다.
-    </div>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:24%">기술명</th>
+          <th style="width:14%">대학교</th>
+          <th style="width:14%">연구실</th>
+          <th style="width:12%">연구자</th>
+          <th style="width:36%">기술요약</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
   `;
 }
 
-async function main() {
-  const contentEl = document.getElementById('content');
-  const tabsEl = document.getElementById('weekTabs');
-  const totalEl = document.getElementById('totalCount');
-  const updatedEl = document.getElementById('lastUpdated');
+/* ---------- 공용 섹션 로더 ---------- */
+async function loadSection({ dataUrl, prefix, renderTable, emptyMsg }) {
+  const totalEl = document.getElementById(`${prefix}-total`);
+  const updatedEl = document.getElementById(`${prefix}-updated`);
+  const tabsEl = document.getElementById(`${prefix}-weekTabs`);
+  const contentEl = document.getElementById(`${prefix}-content`);
 
   let data = [];
   try {
-    const res = await fetch('data/all.json', { cache: 'no-store' });
+    const res = await fetch(dataUrl, { cache: 'no-store' });
     data = await res.json();
   } catch (e) {
-    contentEl.innerHTML = emptyState();
+    contentEl.innerHTML = emptyState(emptyMsg);
+    tabsEl.style.display = 'none';
     updatedEl.textContent = '';
     return;
   }
 
   if (!data.length) {
-    contentEl.innerHTML = emptyState();
+    contentEl.innerHTML = emptyState(emptyMsg);
     tabsEl.style.display = 'none';
     updatedEl.textContent = '';
     return;
@@ -376,8 +455,8 @@ async function main() {
   ).join('');
 
   function show(week) {
-    contentEl.innerHTML = renderWeek(week, byWeek[week]);
-    document.querySelectorAll('.week-tab').forEach(btn => {
+    contentEl.innerHTML = renderTable(byWeek[week]);
+    tabsEl.querySelectorAll('.week-tab').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.week === week);
     });
   }
@@ -390,7 +469,30 @@ async function main() {
   show(weeks[0]);
 }
 
-main();
+/* ---------- 섹션 탭 전환 ---------- */
+document.getElementById('sectionTabs').addEventListener('click', (ev) => {
+  const btn = ev.target.closest('.section-tab');
+  if (!btn) return;
+  document.querySelectorAll('.section-tab').forEach(b => b.classList.toggle('active', b === btn));
+  document.querySelectorAll('.section-panel').forEach(p => {
+    p.classList.toggle('active', p.id === `panel-${btn.dataset.section}`);
+  });
+});
+
+/* ---------- 초기 로드 ---------- */
+loadSection({
+  dataUrl: 'data/all.json',
+  prefix: 'funding',
+  renderTable: renderFundingTable,
+  emptyMsg: '아직 수집된 투자유치 데이터가 없습니다.',
+});
+
+loadSection({
+  dataUrl: 'data/tech.json',
+  prefix: 'tech',
+  renderTable: renderTechTable,
+  emptyMsg: '아직 수집된 기술동향 데이터가 없습니다.',
+});
 </script>
 </body>
 </html>
