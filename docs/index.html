@@ -385,10 +385,34 @@ function renderFundingTable(entries) {
   `;
 }
 
-/* ---------- 기술동향 섹션 렌더러 ---------- */
+const CATEGORY_COLOR = {
+  'AI·소프트웨어': 'var(--stage-a)',
+  '반도체': 'var(--stage-b)',
+  '배터리·에너지': 'var(--seal)',
+  '바이오·헬스케어': 'var(--stage-c)',
+  '로봇': 'var(--stage-d)',
+  '모빌리티': 'var(--ledger-blue)',
+  '소재·화학': '#6B7280',
+  '양자기술': '#7A3F82',
+  '통신·네트워크': '#3B5FA5',
+  '우주·항공': '#1C2233',
+  '기타': 'var(--stage-unknown)',
+};
+function categoryColor(cat) {
+  return CATEGORY_COLOR[cat] || 'var(--stage-unknown)';
+}
+
+/* ---------- 기술동향 섹션 렌더러 (카테고리별로 묶어서 정렬) ---------- */
 function renderTechTable(entries) {
-  const rows = entries.map(e => `
+  const sorted = entries.slice().sort((a, b) =>
+    (a.category || '기타').localeCompare(b.category || '기타', 'ko')
+  );
+
+  const rows = sorted.map(e => `
     <tr>
+      <td data-label="카테고리">
+        <span class="stage-pill" style="background:${categoryColor(e.category)}">${escapeHtml(e.category || '기타')}</span>
+      </td>
       <td data-label="기술명" class="primary-cell">
         <a href="${escapeHtml(e.source_url)}" target="_blank" rel="noopener">${escapeHtml(e.tech_name)}</a>
       </td>
@@ -403,11 +427,12 @@ function renderTechTable(entries) {
     <table>
       <thead>
         <tr>
-          <th style="width:24%">기술명</th>
-          <th style="width:14%">대학교</th>
-          <th style="width:14%">연구실</th>
-          <th style="width:12%">연구자</th>
-          <th style="width:36%">기술요약</th>
+          <th style="width:11%">카테고리</th>
+          <th style="width:20%">기술명</th>
+          <th style="width:12%">대학교</th>
+          <th style="width:12%">연구실</th>
+          <th style="width:10%">연구자</th>
+          <th style="width:35%">기술요약</th>
         </tr>
       </thead>
       <tbody>${rows}</tbody>
