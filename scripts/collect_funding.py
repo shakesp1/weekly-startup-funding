@@ -102,6 +102,28 @@ def _looks_like_investor(name: str) -> bool:
     return any(hint in name for hint in INVESTOR_SUFFIX_HINTS)
 
 
+# 정부기관/지자체/대기업 등 "스타트업"이 아닌 주체. 뉴스 제목 맨 앞에 흔히 등장해서
+# 회사명으로 잘못 추출되는 경우를 막기 위한 차단 목록 (정확히 일치할 때만 차단)
+ENTITY_BLOCKLIST = {
+    # 정부/공공기관
+    "정부", "청와대", "국회", "중기부", "중소벤처기업부", "금융위", "금융위원회",
+    "기획재정부", "산업통상자원부", "과학기술정보통신부", "고용노동부", "국토교통부",
+    "특허청", "관세청", "국세청",
+    # 광역자치단체 (시/도 표기 여러 형태 포함)
+    "서울", "서울시", "부산", "부산시", "대구", "대구시", "인천", "인천시",
+    "광주", "광주시", "대전", "대전시", "울산", "울산시", "세종", "세종시",
+    "경기", "경기도", "강원", "강원도", "충북", "충북도", "충청북도",
+    "충남", "충남도", "충청남도", "전북", "전북도", "전라북도",
+    "전남", "전남도", "전라남도", "경북", "경북도", "경상북도",
+    "경남", "경남도", "경상남도", "제주", "제주도",
+    # 대기업 그룹 (전략적투자 뉴스에서 주어로 자주 등장)
+    "삼성", "삼성전자", "삼성SDS", "삼성SDI", "LG", "LG전자", "LG유플러스",
+    "SK", "SK그룹", "SK텔레콤", "SK하이닉스", "현대", "현대차", "현대자동차",
+    "현대모비스", "롯데", "롯데그룹", "한화", "한화그룹", "GS", "GS그룹",
+    "신세계", "두산", "포스코", "KT", "CJ", "카카오", "네이버", "쿠팡",
+}
+
+
 def clean_text(raw: str) -> str:
     text = re.sub(r"<[^>]+>", "", raw or "")
     return html.unescape(text).strip()
@@ -308,6 +330,8 @@ def extract_company(title: str):
 
     for cand in candidates:
         if cand in STOPWORDS_FOR_COMPANY:
+            continue
+        if cand in ENTITY_BLOCKLIST:
             continue
         if _looks_like_investor(cand):
             continue
