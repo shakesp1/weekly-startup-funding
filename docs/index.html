@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>주간 스타트업 투자유치 원장</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;700;900&family=IBM+Plex+Sans+KR:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #F5F2EA;
+    --ink: #1C2233;
+    --ink-soft: #565C6E;
+    --rule: #D8D3C4;
+    --seal: #A13B29;
+    --ledger-blue: #22406B;
+    --card: #FFFFFF;
+    --stage-seed: #6B7280;
+    --stage-a: #22406B;
+    --stage-b: #3B5FA5;
+    --stage-c: #5B4E9E;
+    --stage-d: #7A3F82;
+    --stage-unknown: #8A8578;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'IBM Plex Sans KR', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 48px 24px 96px;
+  }
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 3px solid var(--ink);
+    padding-bottom: 20px;
+    margin-bottom: 8px;
+    gap: 20px;
+  }
+
+  .masthead-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    color: var(--seal);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  h1 {
+    font-family: 'Noto Serif KR', serif;
+    font-weight: 900;
+    font-size: 34px;
+    line-height: 1.25;
+    margin: 0 0 8px;
+  }
+
+  .subhead {
+    color: var(--ink-soft);
+    font-size: 14px;
+    max-width: 50ch;
+  }
+
+  .seal {
+    flex-shrink: 0;
+    width: 84px;
+    height: 84px;
+    position: relative;
+  }
+  .seal svg { width: 100%; height: 100%; }
+  .seal .ring-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 7.4px;
+    letter-spacing: 2px;
+    fill: var(--seal);
+  }
+  .seal circle.dial { fill: none; stroke: var(--seal); stroke-width: 1; }
+  .seal .mark { fill: var(--seal); font-size: 20px; font-family: 'Noto Serif KR', serif; font-weight: 700; }
+
+  .meta-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-soft);
+    padding: 12px 0 24px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  #totalCount { color: var(--ink); font-weight: 600; }
+
+  .disclaimer {
+    background: #FBF3E7;
+    border: 1px solid #E7D9BE;
+    border-radius: 4px;
+    padding: 10px 14px;
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-bottom: 20px;
+    line-height: 1.6;
+  }
+
+  .week-tabs {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    margin-bottom: 24px;
+  }
+  .week-tab {
+    flex-shrink: 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    padding: 7px 14px;
+    border: 1px solid var(--rule);
+    background: var(--card);
+    color: var(--ink-soft);
+    cursor: pointer;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+  .week-tab.active {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--paper);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card);
+  }
+  thead th {
+    text-align: left;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    color: var(--paper);
+    background: var(--ledger-blue);
+    padding: 12px 14px;
+    font-weight: 600;
+  }
+  tbody td {
+    padding: 14px;
+    border-bottom: 1px solid var(--rule);
+    font-size: 13.5px;
+    vertical-align: top;
+  }
+  tbody tr:hover { background: #FBFAF5; }
+  tbody tr:last-child td { border-bottom: none; }
+
+  .company {
+    font-weight: 700;
+    font-size: 14.5px;
+  }
+  .company a {
+    color: var(--ink);
+    text-decoration: none;
+    border-bottom: 1px solid var(--rule);
+  }
+  .company a:hover { border-bottom-color: var(--seal); color: var(--seal); }
+
+  .stage-pill {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 3px;
+    color: #fff;
+    white-space: nowrap;
+  }
+
+  .amount {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .investors, .summary {
+    color: var(--ink-soft);
+    line-height: 1.55;
+  }
+
+  .empty-state {
+    border: 1px dashed var(--rule);
+    padding: 48px 24px;
+    text-align: center;
+    color: var(--ink-soft);
+    font-size: 14px;
+    line-height: 1.7;
+  }
+  .empty-state strong { color: var(--ink); }
+
+  footer {
+    margin-top: 40px;
+    padding-top: 16px;
+    border-top: 1px solid var(--rule);
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    line-height: 1.7;
+  }
+
+  @media (max-width: 600px) {
+    h1 { font-size: 26px; }
+    .seal { width: 64px; height: 64px; }
+    thead { display: none; }
+    table, tbody, tr, td { display: block; width: 100%; }
+    tbody tr { border-bottom: 1px solid var(--rule); padding: 12px 0; }
+    tbody td { border: none; padding: 4px 0; }
+    tbody td::before {
+      content: attr(data-label);
+      display: block;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--ink-soft);
+      margin-bottom: 2px;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <div class="masthead-label">Weekly Funding Ledger · Korea Startups</div>
+      <h1>주간 스타트업<br>투자유치 원장</h1>
+      <div class="subhead">네이버 뉴스에서 매주 자동 수집하고, 정규식·키워드 규칙으로 정리한 국내 스타트업 투자유치 기록입니다.</div>
+    </div>
+    <div class="seal" aria-hidden="true">
+      <svg viewBox="0 0 100 100">
+        <circle class="dial" cx="50" cy="50" r="46"/>
+        <circle class="dial" cx="50" cy="50" r="38"/>
+        <path id="ringPath" d="M 50,50 m -42,0 a 42,42 0 1,1 84,0 a 42,42 0 1,1 -84,0" fill="none"/>
+        <text class="ring-text">
+          <textPath href="#ringPath" startOffset="2%">WEEKLY · LEDGER · AUTO-COLLECTED · WEEKLY · LEDGER ·</textPath>
+        </text>
+        <text class="mark" x="50" y="58" text-anchor="middle">₩</text>
+      </svg>
+    </div>
+  </header>
+
+  <div class="meta-row">
+    <span>총 <span id="totalCount">0</span>건 기록됨</span>
+    <span id="lastUpdated">마지막 갱신 확인 중…</span>
+  </div>
+
+  <div class="disclaimer">
+    ⓘ 이 데이터는 AI 요약 없이 정규식·키워드 규칙으로 자동 추출됩니다. 회사명·투자자 인식이 부정확할 수 있으니,
+    정확한 내용은 각 회사명 링크의 원문 기사를 확인해주세요.
+  </div>
+
+  <div class="week-tabs" id="weekTabs"></div>
+  <div id="content"></div>
+
+  <footer>
+    본 데이터는 네이버 뉴스 검색 결과를 규칙 기반으로 자동 추출한 것으로, 오탈자·누락·오류가 있을 수 있습니다.
+    매주 월요일 오전 자동 갱신됩니다.
+  </footer>
+
+</div>
+
+<script>
+const STAGE_COLOR = {
+  '시드': 'var(--stage-seed)',
+  '프리시리즈A': 'var(--stage-a)',
+  '프리시리즈B': 'var(--stage-a)',
+  '시리즈A': 'var(--stage-a)',
+  '시리즈B': 'var(--stage-b)',
+  '시리즈C': 'var(--stage-c)',
+  '시리즈D': 'var(--stage-d)',
+  '시리즈E': 'var(--stage-d)',
+  '브릿지': 'var(--stage-unknown)',
+  '전략적투자': 'var(--stage-unknown)',
+  '미상': 'var(--stage-unknown)',
+};
+
+function stageColor(stage) {
+  return STAGE_COLOR[stage] || '#8A8578';
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str || '';
+  return div.innerHTML;
+}
+
+function renderWeek(weekKey, entries) {
+  const rows = entries.map(e => `
+    <tr>
+      <td data-label="회사" class="company">
+        <a href="${escapeHtml(e.source_url)}" target="_blank" rel="noopener">${escapeHtml(e.company)}</a>
+      </td>
+      <td data-label="투자단계">
+        <span class="stage-pill" style="background:${stageColor(e.stage)}">${escapeHtml(e.stage)}</span>
+      </td>
+      <td data-label="투자금액" class="amount">${escapeHtml(e.amount)}</td>
+      <td data-label="투자자" class="investors">${escapeHtml(e.investors)}</td>
+      <td data-label="요약(사업내용·투자포인트)" class="summary">${escapeHtml(e.summary)}</td>
+    </tr>
+  `).join('');
+
+  return `
+    <table>
+      <thead>
+        <tr>
+          <th style="width:15%">회사</th>
+          <th style="width:11%">투자단계</th>
+          <th style="width:12%">투자금액</th>
+          <th style="width:22%">투자자</th>
+          <th style="width:40%">요약 (사업내용 · 투자포인트)</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+}
+
+function emptyState() {
+  return `
+    <div class="empty-state">
+      아직 수집된 데이터가 없습니다.<br>
+      <strong>매주 월요일 오전 9시(KST)</strong>에 자동으로 수집이 실행됩니다.<br>
+      지금 바로 확인하고 싶다면 저장소의 <strong>Actions 탭 → Weekly Startup Funding Collector → Run workflow</strong>로 수동 실행할 수 있습니다.
+    </div>
+  `;
+}
+
+async function main() {
+  const contentEl = document.getElementById('content');
+  const tabsEl = document.getElementById('weekTabs');
+  const totalEl = document.getElementById('totalCount');
+  const updatedEl = document.getElementById('lastUpdated');
+
+  let data = [];
+  try {
+    const res = await fetch('data/all.json', { cache: 'no-store' });
+    data = await res.json();
+  } catch (e) {
+    contentEl.innerHTML = emptyState();
+    updatedEl.textContent = '';
+    return;
+  }
+
+  if (!data.length) {
+    contentEl.innerHTML = emptyState();
+    tabsEl.style.display = 'none';
+    updatedEl.textContent = '';
+    return;
+  }
+
+  totalEl.textContent = data.length;
+  updatedEl.textContent = `최신 기록일: ${data[0].pub_date}`;
+
+  const byWeek = {};
+  for (const e of data) {
+    if (!byWeek[e.week]) byWeek[e.week] = [];
+    byWeek[e.week].push(e);
+  }
+  const weeks = Object.keys(byWeek).sort().reverse();
+
+  tabsEl.innerHTML = weeks.map((w, i) =>
+    `<button class="week-tab ${i === 0 ? 'active' : ''}" data-week="${w}">${w}</button>`
+  ).join('');
+
+  function show(week) {
+    contentEl.innerHTML = renderWeek(week, byWeek[week]);
+    document.querySelectorAll('.week-tab').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.week === week);
+    });
+  }
+
+  tabsEl.addEventListener('click', (ev) => {
+    const btn = ev.target.closest('.week-tab');
+    if (btn) show(btn.dataset.week);
+  });
+
+  show(weeks[0]);
+}
+
+main();
+</script>
+</body>
+</html>
