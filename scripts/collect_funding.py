@@ -89,6 +89,18 @@ KNOWN_INVESTORS = [
 
 STOPWORDS_FOR_COMPANY = {"스타트업", "한편", "이번", "국내", "관련", "업계", "기업"}
 
+# 이런 접미사로 끝나면 회사명이 아니라 투자자(VC/증권/은행 등)일 가능성이 높음
+INVESTOR_SUFFIX_HINTS = [
+    "인베스트먼트", "벤처스", "캐피탈", "파트너스", "액셀러레이터", "자산운용",
+    "증권", "은행", "벤처투자", "인베스트", "창투", "기술투자", "펀드",
+]
+
+
+def _looks_like_investor(name: str) -> bool:
+    if name in KNOWN_INVESTORS:
+        return True
+    return any(hint in name for hint in INVESTOR_SUFFIX_HINTS)
+
 
 def clean_text(raw: str) -> str:
     text = re.sub(r"<[^>]+>", "", raw or "")
@@ -273,14 +285,34 @@ def extract_investors(text: str):
 
 
 def extract_company(title: str):
-    # 패턴 1: "회사명, ~~" 또는 "회사명·~~" 형태
+    candidates = []
+
+    # 패턴 1: "회사명, ~~" 또는 "회사명·~~" 형태 (문장 맨 앞)
     m = re.match(r"^([가-힣A-Za-z0-9&\-]{2,20})\s*[,·]", title)
-    if m and m.group(1) not in STOPWORDS_FOR_COMPANY:
-        return m.group(1)
-    # 패턴 2: "회사명(이)가/은/는 ~~ 투자유치" 형태
+    if m:
+        candidates.append(m.group(1))
+
+    # 패턴 2: "회사명(이)가/은/는 ~~" 형태 (문장 맨 앞)
     m = re.match(r"^([가-힣A-Za-z0-9&\-]{2,20})\s*(가|은|는|이)\s", title)
-    if m and m.group(1) not in STOPWORDS_FOR_COMPANY:
-        return m.group(1)
+    if m:
+        candidates.append(m.group(1))
+
+    # 패턴 3: "~~가 [회사명]에 [금액/투자단계 등] 투자" 형태 (투자자가 주어로 오는 문장에서
+    # 실제 투자받은 회사명을 "~에" 앞에서 찾음)
+    m = re.search(
+        r"([가-힣A-Za-z0-9&\-]{2,20})\s*에\s*[가-힣A-Za-z0-9,\.\s]{0,20}?투자",
+        title,
+    )
+    if m:
+        candidates.append(m.group(1))
+
+    for cand in candidates:
+        if cand in STOPWORDS_FOR_COMPANY:
+            continue
+        if _looks_like_investor(cand):
+            continue
+        return cand
+
     return None
 
 
