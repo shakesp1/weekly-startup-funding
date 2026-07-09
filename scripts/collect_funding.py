@@ -19,7 +19,9 @@ import json
 import time
 import html
 import datetime
+import urllib.parse
 import requests
+import feedparser
 
 NAVER_CLIENT_ID = os.environ.get("NAVER_CLIENT_ID")
 NAVER_CLIENT_SECRET = os.environ.get("NAVER_CLIENT_SECRET")
@@ -39,6 +41,21 @@ SEARCH_KEYWORDS = [
 ]
 
 LOOKBACK_DAYS = 8
+
+# 스타트업 전문 매체가 공식 제공하는 RSS 피드 (크롤링이 아니라 정식 배포 채널이라 안전함)
+RSS_FEEDS = [
+    "http://platum.kr/feed",
+    "http://www.venturesquare.net/feed",
+]
+
+# 구글 뉴스도 공식 RSS 검색 결과를 제공함 (역시 정식 배포 채널)
+GOOGLE_NEWS_QUERIES = [
+    "스타트업 시드 투자유치",
+    "스타트업 시리즈A 투자유치",
+    "스타트업 시리즈B 투자유치",
+    "스타트업 시리즈C 투자유치",
+    "스타트업 투자유치",
+]
 
 # 투자단계 키워드. 긴 표현을 먼저 검사해야 "시리즈A"가 "프리시리즈A"를 가리는 실수를 막을 수 있음
 STAGE_PATTERNS = [
@@ -74,7 +91,7 @@ STOPWORDS_FOR_COMPANY = {"스타트업", "한편", "이번", "국내", "관련",
 
 
 def clean_text(raw: str) -> str:
-    text = re.sub(r"</?b>", "", raw or "")
+    text = re.sub(r"<[^>]+>", "", raw or "")
     return html.unescape(text).strip()
 
 
@@ -94,32 +111,31 @@ def parse_pubdate(pubdate_str: str) -> datetime.datetime:
     return datetime.datetime.strptime(pubdate_str, "%a, %d %b %Y %H:%M:%S %z")
 
 
-def collect_raw_news() -> list:
-    cutoff = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))) - datetime.timedelta(
-        days=LOOKBACK_DAYS
-    )
-    seen_links = set()
-    collected = []
+def _within_cutoff(pub: datetime.datetime, cutoff: datetime.datetime) -> bool:
+    if pub.tzinfo is None:
+        pub = pub.replace(tzinfo=datetime.timezone(datetime.timedelta(hours=9)))
+    return pub >= cutoff
 
+
+def collect_from_naver(cutoff: datetime.datetime) -> list:
+    collected = []
     for kw in SEARCH_KEYWORDS:
         try:
             items = search_naver_news(kw)
         except requests.HTTPError as e:
-            print(f"[경고] '{kw}' 검색 실패: {e}")
+            print(f"[경고] 네이버 '{kw}' 검색 실패: {e}")
             continue
 
         for item in items:
             link = item.get("originallink") or item.get("link")
-            if not link or link in seen_links:
+            if not link:
                 continue
             try:
                 pub = parse_pubdate(item.get("pubDate", ""))
             except ValueError:
                 continue
-            if pub < cutoff:
+            if not _within_cutoff(pub, cutoff):
                 continue
-
-            seen_links.add(link)
             collected.append(
                 {
                     "title": clean_text(item.get("title", "")),
@@ -129,9 +145,97 @@ def collect_raw_news() -> list:
                 }
             )
         time.sleep(0.2)
-
-    print(f"[정보] 후보 뉴스 {len(collected)}건 수집 (키워드 {len(SEARCH_KEYWORDS)}개)")
+    print(f"[정보] 네이버 뉴스에서 후보 {len(collected)}건")
     return collected
+
+
+def collect_from_rss_feeds(cutoff: datetime.datetime) -> list:
+    collected = []
+    for url in RSS_FEEDS:
+        try:
+            feed = feedparser.parse(url)
+        except Exception as e:
+            print(f"[경고] RSS 수집 실패 ({url}): {e}")
+            continue
+
+        for entry in feed.entries:
+            link = entry.get("link")
+            if not link:
+                continue
+            if not entry.get("published_parsed"):
+                continue
+            pub = datetime.datetime(*entry.published_parsed[:6], tzinfo=datetime.timezone.utc).astimezone(
+                datetime.timezone(datetime.timedelta(hours=9))
+            )
+            if not _within_cutoff(pub, cutoff):
+                continue
+            collected.append(
+                {
+                    "title": clean_text(entry.get("title", "")),
+                    "description": clean_text(entry.get("summary", "")),
+                    "link": link,
+                    "pub_date": pub.strftime("%Y-%m-%d"),
+                }
+            )
+    print(f"[정보] RSS 피드({len(RSS_FEEDS)}개)에서 후보 {len(collected)}건")
+    return collected
+
+
+def collect_from_google_news(cutoff: datetime.datetime) -> list:
+    collected = []
+    for query in GOOGLE_NEWS_QUERIES:
+        encoded = urllib.parse.quote(query)
+        url = f"https://news.google.com/rss/search?q={encoded}&hl=ko&gl=KR&ceid=KR:ko"
+        try:
+            feed = feedparser.parse(url)
+        except Exception as e:
+            print(f"[경고] 구글 뉴스 검색 실패 ('{query}'): {e}")
+            continue
+
+        for entry in feed.entries:
+            link = entry.get("link")
+            if not link:
+                continue
+            if not entry.get("published_parsed"):
+                continue
+            pub = datetime.datetime(*entry.published_parsed[:6], tzinfo=datetime.timezone.utc).astimezone(
+                datetime.timezone(datetime.timedelta(hours=9))
+            )
+            if not _within_cutoff(pub, cutoff):
+                continue
+            collected.append(
+                {
+                    "title": clean_text(entry.get("title", "")),
+                    "description": clean_text(entry.get("summary", "")),
+                    "link": link,
+                    "pub_date": pub.strftime("%Y-%m-%d"),
+                }
+            )
+        time.sleep(0.2)
+    print(f"[정보] 구글 뉴스 검색에서 후보 {len(collected)}건")
+    return collected
+
+
+def collect_raw_news() -> list:
+    cutoff = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))) - datetime.timedelta(
+        days=LOOKBACK_DAYS
+    )
+
+    all_items = []
+    all_items += collect_from_naver(cutoff)
+    all_items += collect_from_rss_feeds(cutoff)
+    all_items += collect_from_google_news(cutoff)
+
+    seen_links = set()
+    deduped = []
+    for item in all_items:
+        if item["link"] in seen_links:
+            continue
+        seen_links.add(item["link"])
+        deduped.append(item)
+
+    print(f"[정보] 전체 소스 합산 후 중복 제거된 후보 뉴스: {len(deduped)}건")
+    return deduped
 
 
 def extract_stage(text: str):
