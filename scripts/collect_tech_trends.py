@@ -73,6 +73,35 @@ KNOWN_UNIVERSITIES = [
 
 STOPWORDS_TITLE = {"연구팀", "대학교", "국내"}
 
+# 기술 카테고리 키워드 매핑. 위에서부터 순서대로 검사하며, 먼저 매칭되는 카테고리로 분류됨
+CATEGORY_KEYWORDS = [
+    ("AI·소프트웨어", ["인공지능", "AI", "딥러닝", "머신러닝", "생성형", "알고리즘", "소프트웨어"]),
+    ("반도체", ["반도체", "웨이퍼", "트랜지스터", "파운드리", "낸드", "D램"]),
+    ("배터리·에너지", ["배터리", "이차전지", "태양광", "수소", "연료전지", "에너지저장"]),
+    ("바이오·헬스케어", ["바이오", "신약", "백신", "유전자", "세포", "의료", "헬스케어", "치료제", "진단", "항암"]),
+    ("로봇", ["로봇", "로보틱스"]),
+    ("모빌리티", ["자율주행", "모빌리티", "전기차", "드론", "UAM"]),
+    ("소재·화학", ["신소재", "나노", "화학", "촉매", "그래핀", "반도체 소재"]),
+    ("양자기술", ["양자", "퀀텀"]),
+    ("통신·네트워크", ["5G", "6G", "통신", "네트워크"]),
+    ("우주·항공", ["우주", "위성", "항공", "발사체"]),
+]
+
+
+def extract_category(text: str) -> str:
+    for label, keywords in CATEGORY_KEYWORDS:
+        for kw in keywords:
+            if re.fullmatch(r"[A-Za-z0-9]+", kw):
+                # 영문/숫자로만 된 짧은 키워드(AI, 5G 등)는 다른 단어 안에 우연히 포함되는 걸
+                # 막기 위해 앞뒤가 영문/숫자가 아닐 때만 매칭 (예: "KAIST" 안의 "AI"는 제외)
+                pattern = r"(?<![A-Za-z0-9])" + re.escape(kw) + r"(?![A-Za-z0-9])"
+                if re.search(pattern, text, re.IGNORECASE):
+                    return label
+            else:
+                if kw in text:
+                    return label
+    return "기타"
+
 
 def clean_text(raw: str) -> str:
     text = re.sub(r"<[^>]+>", "", raw or "")
@@ -254,6 +283,7 @@ def process_news(raw_news: list) -> list:
 
         results.append(
             {
+                "category": extract_category(combined_text),
                 "university": university or "확인 필요",
                 "lab": extract_lab(combined_text) or "확인 필요",
                 "researcher": researcher or "확인 필요",
@@ -326,4 +356,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
